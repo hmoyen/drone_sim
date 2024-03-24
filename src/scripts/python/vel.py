@@ -1,85 +1,97 @@
-# ====================================================================
-# Implementacao do client MQTT utilizando a bilbioteca MQTT Paho
-# ====================================================================
-import paho.mqtt.client as mqtt
+import rospy
 import time
 import random
-import rospy
-from mav import MAV2  # Seu arquivo MAV2.py com a classe MAV2
-import time
+import paho.mqtt.client as mqtt
+from geometry_msgs.msg import PoseStamped
+from gazebo_msgs.msg import ContactsState
+from std_msgs.msg import Bool
+from mav import MAV2  # Assuming MAV2 class is defined in the mav.py file
 
-user = ""
-passwd = ""
+class Drone:
+    def __init__(self):
+        rospy.init_node('mqtt_to_ros_bridge')
+        self.dr = MAV2()
+        self.started = False
+        self.collision_detected = False
+        self.last_collision_time = 0
+        self.last_publish_time = 0
+        self.publish_interval = 0.1  # Intervalo de publicação de 10Hz
+        self.MAX_NO_COL_COUNT = 15  # Número máximo de mensagens "sem colisão"
+        self.no_collision_count = 0
+        self.collision_buffer = []
 
-Broker = "192.168.6.78"            # Endereco do broker
-Port = 1883                           # Porta utilizada 
-KeepAlive = 60                      # Intervalo de timeout (60s)
-TopicoL = "out"               # Topico que sera lido
-TopicoE = "in"              # Topico que sera escrito
-client_id = f'python-mqtt-{random.randint(0, 1000)}'
+        # MQTT client initialization
+        self.mqtt_client = MQTTClient()
 
-db = 1                              # Flag de depuracao (verbose)
-z = 2
-square_size = 1.5
-# Quando conectar na rede (Callback de conexao)
-def on_connect(client, userdata, flags, rc):
-    print("Conectado com codigo " + str(rc))
-    client.subscribe(TopicoL, qos=0)
+        rospy.Subscriber('/mavros/local_position/pose', PoseStamped, self.pose_callback, queue_size=10)
+        rospy.Subscriber('/drone_bumper', ContactsState, self.bumper_callback, queue_size=10)
 
-# Quando receber uma mensagem (Callback de mensagem)
-def on_message(client, userdata, msg):
-    client.newmsg = True    
-    client.msg = msg.payload.decode("utf-8")
-
-# Funcao que espera nova mensagem do terminal
-# Por enquanto o parametro "topico" nao possui utilidade
-def le_terminal(topico=TopicoL, verbose=db):
-    client.newmsg = False
-
-    # Fica em loop infinito ate receber uma nova mensagem
-    while not client.newmsg:
-        client.loop_start()
-        # time.sleep(2)
-        client.loop_stop()
-
-    if verbose == 1:
-        print("> " + client.msg)
-        if client.msg == '1':
-            try:
-                # dr.go_to_local([-square_size, 0, z])  # Isso publicará um comando para mover 1 metro no eixo X
-                dr.set_vel(2,0,0)
-            except KeyboardInterrupt:
-                print("foi")
-        else:
-            print("> " + client.msg)
-            try:
-                # dr.go_to_local([-square_size, 0, z])  # Isso publicará um comando para mover 1 metro no eixo X
-                dr.set_vel(0,0,0)
-            except KeyboardInterrupt:
-                print("foi")
-
-    return client.msg
-
-# Funcao que escreve no terminal
-# Por padrao vai escrever no topico apontado por "TopicoE"
-def escreve_terminal(frase, topico=TopicoE, verbose=db):
-    client.publish(topico, payload=frase, qos=0, retain=False)
-    if verbose == 1:
-        print(frase)
-
-rospy.init_node('mqtt_to_ros_bridge')
-dr = MAV2()
-try:
-    dr.takeoff(2)
-    print("Takeoff sent")
-except KeyboardInterrupt:
-        print("foi")
+    def bumper_callback(self, msg):
+        current_time = time.time()
         
-client = mqtt.Client()                      # Criacao do cliente MQTT
-client.on_connect = on_connect              # Vinculo do Callback de conexao
-client.on_message = on_message              # Vinculo do Callback de mensagem recebida
-# client.username_pw_set(user, passwd)        # Apenas para coneccao com login/senha
-client.connect(Broker, Port, KeepAlive)     # Conexao do cliente ao broker
-# escreve_terminal('1')
-while True:
-    le_terminal()
+        if not self.started:
+            self.collision_detected = False
+            self.no_collision_count = 0
+            self.publish_no_collision()
+
+        elif msg.states:
+            # Collision detected
+            self.collision_detected = True
+            self.last_collision_time = current_time
+            self.no_collision_count = 0
+            
+            if current_time - self.last_publish_time >= self.publish_interval:
+                self.collision_buffer.append(1)  # Adiciona mensagem de "com colisão" ao buffer
+                self.last_publish_time = current_time
+
+                if len(self.collision_buffer) >= 1:
+                    self.mqtt_client.publish_collision(self.collision_buffer[0])
+                    self.collision_buffer.clear()
+                
+        else:
+            # No collision
+            self.collision_detected = False
+            self.no_collision_count += 1
+            if self.no_collision_count >= self.MAX_NO_COL_COUNT:
+                self.publish_no_collision()
+
+    def publish_no_collision(self):
+        if time.time() - self.last_publish_time >= self.publish_interval:
+            self.mqtt_client.publish_collision(0)  # Publica 5 mensagens de "sem colisão"
+            self.last_publish_time = time.time()
+
+    def pose_callback(self, msg):
+        if msg.pose.position.z < 3:
+            self.started = False
+        else:
+            self.started = True
+
+class MQTTClient:
+    def __init__(self):
+        self.client = mqtt.Client(client_id=f'python-mqtt-{random.randint(0, 1000)}')
+        self.client.on_connect = self.on_connect
+        self.client.on_message = self.on_message
+
+        self.Broker = "192.168.0.27"
+        self.Port = 1883
+        self.KeepAlive = 600
+        self.TopicCollision = "drone_collision"
+
+        self.client.connect(self.Broker, self.Port, self.KeepAlive)
+
+    def on_connect(self, client, userdata, flags, rc):
+        print("Connected to MQTT Broker with result code " + str(rc))
+
+    def on_message(self, client, userdata, msg):
+        print(msg.topic + " " + str(msg.payload))
+
+    def publish_collision(self, collision):
+        print("Published:", collision)
+        self.client.publish(self.TopicCollision, payload=collision, qos=0, retain=False)
+
+def main():
+    drone = Drone()
+    rospy.spin()
+
+if __name__ == '__main__':
+    main()
