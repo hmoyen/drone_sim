@@ -5,6 +5,7 @@ from mavros_msgs.srv import SetMode, CommandBool, CommandTOL, ParamSet
 from mavros_msgs.srv import CommandTOLRequest, CommandLongRequest, CommandLong, CommandBoolRequest
 from mavros_msgs.msg import State, ExtendedState, ParamValue, PositionTarget
 import time
+from gazebo_msgs.msg import ContactsState
 from geometry_msgs.msg import PoseStamped, TwistStamped
 import numpy as np
 
@@ -44,7 +45,7 @@ class MAV2():
         #self.local_position_pub = rospy.Publisher('gambiarra/setpoint_local', PoseStamped, queue_size = 20)
         self.velocity_pub = rospy.Publisher('/mavros/setpoint_velocity/cmd_vel',  TwistStamped, queue_size=5)
         self.target_pub = rospy.Publisher('/mavros/setpoint_raw/local', PositionTarget, queue_size=5)
-
+        self.bumper_sub = rospy.Subscriber('/drone_bumper', ContactsState, queue_size=5)
         ########## Subscribers ##################
         #/gambiarra/local_pose
         self.local_atual = rospy.Subscriber('/mavros/local_position/pose', PoseStamped, self.local_callback)

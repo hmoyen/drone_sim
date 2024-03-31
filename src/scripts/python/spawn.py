@@ -55,11 +55,37 @@ def main():
 
     # Define the path to the tree model SDF file
     tree_model_path = "/home/lena/sky_ws/src/sky_sim/models/palm_tree/model.sdf"
+    # Define the path to the box model SDF file
+    box_model_path = "/home/lena/sky_ws/src/sky_sim/models/wall/box.sdf"
 
     # List to store the names of spawned models
     spawned_model_names = []
 
-    # Iterate through each cell in the matrix
+    # Define the dimensions of the box and the gap between the matrix and the wall of boxes
+    box_dimensions = [cell_size, cell_size, 20]  # Assuming the wall is 2 meters tall
+    gap = 1  # Gap between the matrix and the wall
+
+    # Iterate through the outer boundary of the matrix to spawn boxes
+    for i in range(len(matrix) + 2):
+        for j in range(len(matrix[0]) + 2):
+            # If we're at a position outside the matrix, spawn a box
+            if i == 0 or i == len(matrix) + 1 or j == 0 or j == len(matrix[0]) + 1:
+                # Calculate the position of the box
+                x = (j - 1) * cell_size - gap * (j == 0 or j == len(matrix[0]) + 1)
+                y = (i - 1) * cell_size - gap * (i == 0 or i == len(matrix) + 1)
+                z = box_dimensions[2] / 2  # Center the box on the ground
+                # Define the pose of the box model
+                model_pose = Pose()
+                model_pose.position.x = x
+                model_pose.position.y = y
+                model_pose.position.z = z
+                # Spawn the box model in Gazebo
+                model_name = "box_" + str(i) + "_" + str(j)  # Unique model name
+                spawn_model(box_model_path, model_name, model_pose)
+                # Append the spawned model name to the list
+                spawned_model_names.append(model_name)
+
+    # Iterate through each cell in the matrix to spawn trees
     for i in range(len(matrix)):
         for j in range(len(matrix[0])):
             # Check if the cell contains a tree obstacle
