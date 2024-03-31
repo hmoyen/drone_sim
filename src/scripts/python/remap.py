@@ -1,14 +1,14 @@
-#!/usr/bin/env python
 import subprocess
 import rospy
 import time
+import random
 from mav import MAV2
 from geometry_msgs.msg import Pose
 from std_msgs.msg import Int32
 from gazebo_msgs.msg import ContactsState
 from geometry_msgs.msg import PoseStamped
 from gazebo_msgs.srv import SpawnModel, DeleteModel
-
+import math
 
 prev_row = None
 prev_col = None
@@ -20,7 +20,6 @@ def get_square_coordinates(x, y, cell_size):
     row = int(y / cell_size)  # Calculate row
     col = int(x / cell_size)  # Calculate column
     return row, col
-
 
 def publish_movement_flags():
     """
@@ -86,7 +85,7 @@ def pose_callback(data):
     # Publish movement flags
     publish_movement_flags()
 
-def spawn_model(model_path, model_name, model_pose):
+def spawn_model(model_path, model_name, model_pose, orientation=None):
     """
     Function to spawn a model in Gazebo.
     """
@@ -95,6 +94,8 @@ def spawn_model(model_path, model_name, model_pose):
         spawn_sdf = rospy.ServiceProxy('/gazebo/spawn_sdf_model', SpawnModel)
         with open(model_path, "r") as f:
             model_xml = f.read()
+        if orientation is not None:
+            model_pose.orientation = orientation.orientation
         spawn_sdf(model_name, model_xml, "/", model_pose, "world")
     except rospy.ServiceException as e:
         rospy.logerr("Spawn model service call failed: {0}".format(e))
@@ -185,10 +186,8 @@ if __name__ == '__main__':
     # Define the size of each grid cell
     cell_size = 10
 
-    # Define the path to the tree model SDF file
-    tree_model_path = "/home/lena/sky_ws/src/sky_sim/models/palm_tree/model.sdf"
     # Define the path to the box model SDF file
-    box_model_path = "/home/lena/sky_ws/src/sky_sim/models/wall/box.sdf"
+    box_model_path = "/home/lena/sky_ws/src/sky_sim/models/grey_wall/model.sdf"
 
     # List to store the names of spawned models
     spawned_model_names = []
@@ -206,44 +205,68 @@ if __name__ == '__main__':
                 x = (j - 1) * cell_size - gap * (j == 0 or j == len(matrix[0]) + 1)
                 y = (i - 1) * cell_size - gap * (i == 0 or i == len(matrix) + 1)
                 z = box_dimensions[2] / 2  # Center the box on the ground
+
+                # Calculate the orientation of the box (rotation around z-axis)
+                orientation = Pose()
+                if i == 0 or i == len(matrix) + 1:  # Along the y-axis
+                    orientation.orientation.w = 1
+                else:  # Along the x-axis
+                    orientation.orientation.z = math.sin(math.pi / 4)
+                    orientation.orientation.w = math.cos(math.pi / 4)
+
                 # Define the pose of the box model
                 model_pose = Pose()
                 model_pose.position.x = x
                 model_pose.position.y = y
                 model_pose.position.z = z
+
                 # Spawn the box model in Gazebo
                 model_name = "box_" + str(i) + "_" + str(j)  # Unique model name
-                spawn_model(box_model_path, model_name, model_pose)
+                spawn_model(box_model_path, model_name, model_pose, orientation)
                 # Append the spawned model name to the list
                 spawned_model_names.append(model_name)
 
-    # Iterate through each cell in the matrix to spawn trees
+    # Define a list of model paths corresponding to different objects
+    model_paths = {
+        # 0: "/home/lena/sky_ws/src/sky_sim/models/palm_tree/model.sdf",
+        0: "/home/lena/sky_ws/src/sky_sim/models/salon/model.sdf",
+        1: "/home/lena/sky_ws/src/sky_sim/models/thrift_shop/model.sdf",
+        2: "/home/lena/sky_ws/src/sky_sim/models/law_office/model.sdf"
+        # 2: "/home/lena/sky_ws/src/sky_sim/models/tower_crane/model.sdf"
+        # Add more model paths as needed
+    }
+
+    # Iterate through each cell in the matrix to randomly spawn objects
     for i in range(len(matrix)):
         for j in range(len(matrix[0])):
-            # Check if the cell contains a tree obstacle
-            if matrix[i][j] == 1:
-                # Calculate the position of the tree obstacle in Gazebo
+            # Check if the cell is not empty
+            if matrix[i][j] != 0:
+                # Randomly select a model path based on the matrix value
+                model_path = random.choice(model_paths)
+
+                # Calculate the position of the object
                 x = j * cell_size
                 y = i * cell_size
-                z = 0  # Assuming the trees are placed on the ground
-                # Define the pose of the tree model
+                z = 0  # Assuming the objects are placed on the ground
+
+                # Define the pose of the model
                 model_pose = Pose()
                 model_pose.position.x = x
                 model_pose.position.y = y
                 model_pose.position.z = z
-                # Spawn the tree model in Gazebo
-                model_name = "tree_" + str(i) + "_" + str(j)  # Unique model name
-                spawn_model(tree_model_path, model_name, model_pose)
+
+                # Spawn the model in Gazebo
+                model_name = "object_" + str(i) + "_" + str(j)  # Unique model name
+                spawn_model(model_path, model_name, model_pose)
                 # Append the spawned model name to the list
                 spawned_model_names.append(model_name)
-
 
     # Initialize the output publisher
     output_pub = rospy.Publisher('/broker/collision', Int32, queue_size=10)
     rospy.Subscriber('/drone_bumper', ContactsState, input_callback, queue_size=10)
-    rospy.Subscriber('/ros/set_vel_x', Int32, velocity_x_callback, queue_size = 10)
-    rospy.Subscriber('/ros/set_vel_y', Int32, velocity_y_callback, queue_size = 10)
-    rospy.Subscriber('/ros/world', Int32, world_callback, queue_size = 10)
+    rospy.Subscriber('/ros/set_vel_x', Int32, velocity_x_callback, queue_size=10)
+    rospy.Subscriber('/ros/set_vel_y', Int32, velocity_y_callback, queue_size=10)
+    rospy.Subscriber('/ros/world', Int32, world_callback, queue_size=10)
     rospy.Subscriber('/mavros/local_position/pose', PoseStamped, pose_callback, queue_size=10)
     # Initialize publishers for movement flags
     right_pub = rospy.Publisher('/movement/right', Int32, queue_size=10)
@@ -254,8 +277,8 @@ if __name__ == '__main__':
     global collision_detected, output_message, dr, started, last_collision_time
     collision_detected = False
     output_message = 0
-    vel_y_message= 0
-    vel_x_message= 0
+    vel_y_message = 0
+    vel_x_message = 0
     started = False
     last_collision_time = rospy.Time.now()
 
@@ -268,9 +291,9 @@ if __name__ == '__main__':
             print("Takeoff sent")
             rospy.sleep(5)
         except KeyboardInterrupt:
-            print("Interrumpted")
+            print("Interrupted")
 
     while not rospy.is_shutdown():
         output_pub.publish(output_message)
-        dr.set_vel(vel_x_message,vel_y_message,0,0)
+        dr.set_vel(vel_x_message, vel_y_message, 0, 0)
         rate.sleep()
