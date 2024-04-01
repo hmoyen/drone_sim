@@ -455,6 +455,8 @@ if __name__ == '__main__':
         destruct_world(spawned_model_names)
         respawn_model('iris',[0,0,0])
         print("spawned")
+        dr.set_vel(0, 0, 0, 0)
+        output_pub.publish(0)
         # end_ardupilot()
         # end_gazebo()
         end = False
