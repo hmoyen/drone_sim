@@ -32,6 +32,7 @@ prev_col = None
 spawned_model_names=[]
 
 global collision_detected, output_message, dr, started, last_collision_time, end
+global last_forward_time, last_backward_time, last_right_time, last_left_time
 
 # Define a list of model paths corresponding to different objects
 model_paths = {
@@ -106,31 +107,68 @@ def monitor_movement(row, col):
     Function to monitor movement and set movement flags.
     """
     global prev_row, prev_col, moved_right, moved_left, moved_forward, moved_backward
-
-    # Reset movement flags
-    moved_right = False
-    moved_left = False
-    moved_forward = False
-    moved_backward = False
+    global time_since_backward, time_since_forward, time_since_left, time_since_right
+    global last_forward_time, last_backward_time, last_right_time, last_left_time
+    # # Reset movement flags
+    # moved_right = False
+    # moved_left = False
+    # moved_forward = False
+    # moved_backward = False
 
     if prev_row is not None and prev_col is not None:
         # Compare current position with previous position to detect movement direction
+
         if row > prev_row:
-            moved_right = True
+            last_right_time = rospy.get_rostime()
             print("Right")
         elif row < prev_row:
-            moved_left = True
+            last_left_time = rospy.get_rostime()
             print("Left")
         if col > prev_col:
-            moved_backward = True
+            last_backward_time = rospy.get_rostime()
             print("Back")
         elif col < prev_col:
-            moved_forward = True
+            last_forward_time = rospy.get_rostime()
             print("Forward")
+
+    time_since_right = rospy.get_rostime() - last_right_time
+    time_since_left = rospy.get_rostime() - last_left_time
+    time_since_forward = rospy.get_rostime() - last_forward_time
+    time_since_backward = rospy.get_rostime() - last_backward_time
+
+    if time_since_right <= rospy.Duration(1):
+        # Publish a collision message with value 1
+        moved_right = True
+    else:
+        # Publish a collision message with value 0
+        moved_right = False
+    
+    if time_since_left <= rospy.Duration(1):
+        # Publish a collision message with value 1
+        moved_left = True
+    else:
+        # Publish a collision message with value 0
+        moved_left = False
+    
+    if time_since_forward <= rospy.Duration(1):
+        # Publish a collision message with value 1
+        moved_forward = True
+    else:
+        # Publish a collision message with value 0
+        moved_forward = False
+    
+    if time_since_backward <= rospy.Duration(1):
+        # Publish a collision message with value 1
+        moved_backward = True
+    else:
+        # Publish a collision message with value 0
+        moved_backward = False
 
     # Update previous position
     prev_row = row
     prev_col = col
+
+
 
 def pose_callback(data):
     """
@@ -226,8 +264,9 @@ def world_callback(data):
     global world
 
     if not end:
-        world = int(data.data)
-        construct_world(matrixes[world])
+        if data.data != 0:
+            world = int(data.data)
+            construct_world(matrixes[world])
 
 
 def init_callback(data):
@@ -413,6 +452,11 @@ if __name__ == '__main__':
     vel_x_message = 0
     started = False
     last_collision_time = rospy.Time.now()
+    last_forward_time = rospy.Time.now()
+    last_backward_time = rospy.Time.now()
+    last_right_time = rospy.Time.now()
+    last_left_time = rospy.Time.now()
+    
     
     reset = False
     end = False
