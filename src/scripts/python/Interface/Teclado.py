@@ -3,7 +3,7 @@ import pygame
 class Teclado():
     def __init__(self):
         self.teclas = {'UP': False, 'DOWN': False, 'LEFT': False,
-                       'RIGHT': False, 'ENTER': False, 'QUIT': False}
+                       'RIGHT': False, 'ENTER': False, 'QUIT': False, 'SPACE': False}
     
     def get_keys(self):
         
