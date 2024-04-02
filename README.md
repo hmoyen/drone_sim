@@ -25,7 +25,7 @@ To set up and run the project, follow these steps:
 sudo apt-get install ros-<distro>-mqtt-client
 ```
 
-5. **Ensure Necessary Packages in .bashrc**: Make sure that Gazebo, ROS, and the `sky_sim` package are sourced in your `.bashrc` file to enable access to the required functionalities. Add the following lines to your `.bashrc` file:
+5. **Ensure Necessary Packages in .bashrc**: Make sure that Gazebo, ROS, and the `sky_simulator` package are sourced in your `.bashrc` file to enable access to the required functionalities. Add the following lines to your `.bashrc` file:
 
 
 ## Cloning this Repository
