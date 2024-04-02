@@ -39,14 +39,14 @@ git clone --recursive git@github.com:hmoyen/sky_simulator.git
 Head to the Ardupilot fork submodule and install the required dependencies.
 
 ```
-cd sky_simulator/src/sky_base/ardupilot/
+cd sky_simulator/src/sim_base/ardupilot/
 Tools/environment_install/install-prereqs-ubuntu.sh -y
 . ~/.profile
 sudo pip3 install mavproxy
 ``` 
 Then, set the ardupilot path on your .bashrc
 ```
-echo "export PATH=$PATH:$HOME/sky_simulator/src/sky_base/ardupilot/Tools/autotest" >> ~/.bashrc
+echo "export PATH=$PATH:$HOME/sky_simulator/src/sim_base/ardupilot/Tools/autotest" >> ~/.bashrc
 echo "export PATH=/usr/lib/ccache:$PATH" >> ~/.bashrc
 source ~/.bashrc
 ```
@@ -82,7 +82,7 @@ echo "source /usr/share/gazebo/setup.sh" >> ~/.bashrc
 
 First, head to the the ardupilot_gazebo submodule, inside of the sky_base repository.
 ```
-cd sky_simulator/src/sky_base/gz_ws/src/ardupilot_gazebo
+cd sky_simulator/src/sim_base/gz_ws/src/ardupilot_gazebo
 ```
 Then, build the plugin
 
