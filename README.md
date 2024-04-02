@@ -198,8 +198,3 @@ Just run the following commands to initialize the submodules
 ```
 git submodule update --init --recursive
 ```
-
-```bash
-source /opt/ros/<distro>/setup.bash
-source <path_to_sky_sim>/devel/setup.bash
-```
