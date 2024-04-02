@@ -1,3 +1,6 @@
-[submodule "src/sky_base"]
-	path = src/sky_base
-	url = git@github.com:SkyRats/sky_base.git
+[submodule "src/mqtt_client"]
+	path = src/mqtt_client
+	url = git@github.com:ika-rwth-aachen/mqtt_client.git
+[submodule "src/sim_base"]
+	path = src/sim_base
+	url = git@github.com:hmoyen/sim_base.git
