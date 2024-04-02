@@ -18,10 +18,13 @@ To set up and run the project, follow these steps:
 
 3. **Install MQTT-Client ROS Package**: Install the `mqtt-client` ROS package to enable MQTT communication within the ROS ecosystem. You can install it using the following command:
 
-  ´´´bash
-  sudo apt-get install ros-<distro>-mqtt-client
-  ´´´
+```bash
+sudo apt-get install ros-<distro>-mqtt-client
+```
 
 5. **Ensure Necessary Packages in .bashrc**: Make sure that Gazebo, ROS, and the `sky_sim` package are sourced in your `.bashrc` file to enable access to the required functionalities. Add the following lines to your `.bashrc` file:
-   
 
+```bash
+source /opt/ros/<distro>/setup.bash
+source <path_to_sky_sim>/devel/setup.bash
+```
