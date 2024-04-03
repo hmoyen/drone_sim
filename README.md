@@ -17,7 +17,7 @@ To set up and run the project, follow these steps:
 
 1. **Workspace Setup**: First, you need to set up the `sky_simulator` workspace. Clone the workspace repository and follow the setup instructions provided there.
 
-2. **Install Mosquitto MQTT Broker**: Install a local Mosquitto MQTT broker to facilitate communication between components. Follow the installation instructions for your operating system.
+2. **Install Mosquitto MQTT Broker**: Install a local Mosquitto MQTT broker to facilitate communication between components. Follow the [installation instructions](https://medium.com/gravio-edge-iot-platform/how-to-set-up-a-mosquitto-mqtt-broker-securely-using-client-certificates-82b2aaaef9c8) for Ubuntu. It does not need to be secure enough. A basic local mosquitto broker will do. 
 
 3. **Install MQTT-Client ROS Package**: Install the `mqtt-client` ROS package to enable MQTT communication within the ROS ecosystem. You can install it using the following command:
 
