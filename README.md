@@ -177,7 +177,7 @@ These are the commands that `remap.py` calls to run the simulation.
 
 ## 10. Full setup test
 
-To control the drone with the joystic
+To control the drone with the joystick, turn on your ESP32 and run the script `remap.py`. In case of our project, we are still working on an Interface to use as a menu of the game running in the FPGA (with lifes, difficulty leveles, etc).
 
 # Working with Submodules
 
