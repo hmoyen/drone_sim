@@ -25,8 +25,7 @@ To set up and run the project, follow these steps:
 sudo apt-get install ros-<distro>-mqtt-client
 ```
 
-5. **Ensure Necessary Packages in .bashrc**: Make sure that Gazebo, ROS, and the `sky_simulator` package are sourced in your `.bashrc` file to enable access to the required functionalities. Add the following lines to your `.bashrc` file:
-
+5. **Get the items**: you will need a joystick and an ESP32. Upload the .cpp file to the ESP32 (to do), connecting to your personal Wi-Fi and broker (IP Adress of the local host). You PC with Ubuntu and the mosquitto broker needs to be connected to the same WiFi network as the ESP32. In case you are in doubt what IP it is, just type the command in the Ubuntu terminal `hostname -I`. The first IP is your broker's IP.
 
 ## Cloning this Repository
 
