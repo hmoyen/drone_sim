@@ -2,7 +2,9 @@
 
 ## Introduction
 
-Welcome to the documentation for our game project developed by a university group. In this project, we're integrating various technologies including a joystick, ESP8266, an FPGA board, and Gazebo for a graphical interface. My responsibility in the project is to handle the ESP8266 and PC integration via MQTT, and to control the motion of a virtual drone in Gazebo using ROS 1. **This module** handles just the communication of the virtual drone with the movement, collision, init, end and choice of world to play signals. To see the full project, visit [this repository](https://github.com/hmoyen/Lab-Dig/tree/main/PROJETO_DRONE), where the FPGA and ESP32 files are at. To know more about the construction of the drone, see [this documentation](https://community.gazebosim.org/t/mqtt-to-gazebo-drone-simulator/2644/3) of the progress in gazebo community.
+Welcome to the documentation for our game project developed by a university group. In this project, we're integrating various technologies including a joystick, ESP8266, an FPGA board, and Gazebo for a graphical interface. My responsibility in the project is to handle the ESP8266 and PC integration via MQTT, and to control the motion of a virtual drone in Gazebo using ROS 1. 
+
+**This module** handles just the communication of the virtual drone with the movement, collision, init, end and choice of world to play signals. To see the full project, visit [this repository](https://github.com/hmoyen/Lab-Dig/tree/main/PROJETO_DRONE), where the FPGA and ESP32 files are at. To know more about the construction of the drone, see [this documentation](https://community.gazebosim.org/t/mqtt-to-gazebo-drone-simulator/2644/3) of the progress in gazebo community.
 
 ## Project Overview
 
