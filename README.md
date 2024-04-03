@@ -2,7 +2,9 @@
 
 ## Introduction
 
-Hi! Welcome to the documentation for our game project developed by a university group. In this project, we're integrating various technologies including a joystick, ESP8266, an FPGA board, and Gazebo for a graphical interface. My responsibility in the project is to handle the ESP8266 and PC integration via MQTT, and to control the motion of a virtual drone in Gazebo using ROS 1.
+Welcome to the documentation for our game project developed by a university group. In this project, we're integrating various technologies including a joystick, ESP8266, an FPGA board, and Gazebo for a graphical interface. My responsibility in the project is to handle the ESP8266 and PC integration via MQTT, and to control the motion of a virtual drone in Gazebo using ROS 1. 
+
+**This module** handles just the communication of the virtual drone with the movement, collision, init, end and choice of world to play signals. To see the full project, visit [this repository](https://github.com/hmoyen/Lab-Dig/tree/main/PROJETO_DRONE), where the FPGA and ESP32 files are at. To know more about the construction of the drone, see [this documentation](https://community.gazebosim.org/t/mqtt-to-gazebo-drone-simulator/2644/3) of the progress in gazebo community.
 
 ## Project Overview
 
@@ -15,18 +17,11 @@ The game is based on maneuvering a drone to avoid obstacles on a map displayed i
 
 To set up and run the project, follow these steps:
 
-1. **Workspace Setup**: First, you need to set up the `sky_simulator` workspace. Clone the workspace repository and follow the setup instructions provided there.
+1. **Install Mosquitto MQTT Broker**: Install a local Mosquitto MQTT broker to facilitate communication between components. Follow the [installation instructions](https://medium.com/gravio-edge-iot-platform/how-to-set-up-a-mosquitto-mqtt-broker-securely-using-client-certificates-82b2aaaef9c8) for Ubuntu. It does not need to be secure enough. A basic local mosquitto broker will do. 
 
-2. **Install Mosquitto MQTT Broker**: Install a local Mosquitto MQTT broker to facilitate communication between components. Follow the installation instructions for your operating system.
+2. **Workspace Setup**: First, you need to set up the `sky_simulator` workspace. Clone the workspace repository and follow the setup instructions provided there.
 
-3. **Install MQTT-Client ROS Package**: Install the `mqtt-client` ROS package to enable MQTT communication within the ROS ecosystem. You can install it using the following command:
-
-```bash
-sudo apt-get install ros-<distro>-mqtt-client
-```
-
-5. **Ensure Necessary Packages in .bashrc**: Make sure that Gazebo, ROS, and the `sky_simulator` package are sourced in your `.bashrc` file to enable access to the required functionalities. Add the following lines to your `.bashrc` file:
-
+3. **Get the items**: you will need a joystick and an ESP32. Upload the .cpp file to the ESP32 (to do), connecting to your personal Wi-Fi and broker (IP Adress of the local host). You PC with Ubuntu and the mosquitto broker needs to be connected to the same WiFi network as the ESP32. In case you are in doubt what IP it is, just type the command in the Ubuntu terminal `hostname -I`. The first IP is your broker's IP.
 
 ## Cloning this Repository
 
@@ -179,6 +174,10 @@ roslaunch gz_sim sky_sim.launch
 ```
 
 These are the commands that `remap.py` calls to run the simulation.
+
+## 10. Full setup test
+
+To control the drone with the joystick, turn on your ESP32 and run the script `remap.py`. In case of our project, we are still working on an Interface to use as a menu of the game running in the FPGA (with lifes, difficulty leveles, etc).
 
 # Working with Submodules
 
