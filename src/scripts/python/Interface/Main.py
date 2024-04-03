@@ -47,41 +47,41 @@ class Game:
         if keys[pygame.K_DOWN]:
             player.move(0, player.rect.height)
 
-    def run(self):
-        clock = pygame.time.Clock()
-        background, bg_image = self.get_background("Blue.png")    
+    # def run(self):
+    #     clock = pygame.time.Clock()
+    #     background, bg_image = self.get_background("Blue.png")    
         
-        player = Player(100, 100, 50, 50)
-        listener = Teclado()
-        menu = Menu(self.window, listener)
-        state = 'menu'
-        input_device = 'teclado' # teclado ou joystick
+    #     player = Player(100, 100, 50, 50)
+    #     listener = Teclado()
+    #     menu = Menu(self.window, listener)
+    #     state = 'menu'
+    #     input_device = 'teclado' # teclado ou joystick
         
-        pygame.mixer.init()
-        pygame.mixer.music.load('assets/Song/BackgroundSong.mp3')
-        pygame.mixer.music.play()
+    #     pygame.mixer.init()
+    #     pygame.mixer.music.load('assets/Song/BackgroundSong.mp3')
+    #     pygame.mixer.music.play()
         
-        run = True
-        while run:
-            clock.tick(self.FPS)
+    #     run = True
+    #     while run:
+    #         clock.tick(self.FPS)
             
             
-            if input_device == 'teclado':
-                keys = listener.get_keys()
+    #         if input_device == 'teclado':
+    #             keys = listener.get_keys()
                 
-            if keys['QUIT']: #ENCERRA O JOGO
-                run = False
+    #         if keys['QUIT']: #ENCERRA O JOGO
+    #             run = False
             
             
-            if state == 'menu':
-                menu()
-            else:
-                player.loop(self.FPS)
-                self.handle_move(player)
-                self.draw(background, bg_image, player)
+    #         if state == 'menu':
+    #             menu()
+    #         else:
+    #             player.loop(self.FPS)
+    #             self.handle_move(player)
+    #             self.draw(background, bg_image, player)
             
-        pygame.quit()
-        quit()
+    #     pygame.quit()
+    #     quit()
 
 # Example of how to use the class:
 if __name__ == "__main__":

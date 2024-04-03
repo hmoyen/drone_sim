@@ -18,7 +18,7 @@ import signal
 from os import listdir  
 from os.path import isfile, join
 from Player import Player
-from Teclado import Teclado
+# from Teclado import Teclado
 from Main import Game
 from Menu import Menu
 from gazebo_msgs.msg import ModelState
@@ -88,6 +88,40 @@ matrix_2 = [
 ]
 
 matrixes = [matrix_1,matrix_2]
+
+
+class Joystick():
+    def __init__(self):
+        self.teclas = {'UP': False, 'DOWN': False, 'LEFT': False,
+                       'RIGHT': False, 'ENTER': False, 'QUIT': False, 'SPACE': False}
+    
+    def get_keys(self):
+        
+        for k in self.teclas.keys():
+                self.teclas[k] = False 
+                
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.teclas['QUIT'] = True
+                
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    self.teclas['UP'] = True
+                    print('UP pressed')
+                if event.key == pygame.K_DOWN:
+                    self.teclas['DOWN'] = True
+                    print('DOWN pressed')
+                if event.key == pygame.K_LEFT:
+                    self.teclas['LEFT'] = True
+                    print('LEFT pressed')
+                if event.key == pygame.K_RIGHT:
+                    self.teclas['RIGHT'] = True
+                    print('RIGHT pressed')
+                if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
+                    self.teclas['ENTER'] = True
+                    print('ENTER pressed')
+                    
+        return self.teclas
 
 def get_square_coordinates(x, y, cell_size):
     """
@@ -421,6 +455,42 @@ def end_callback(data):
     else:
         end = False
 
+def run(game):
+    clock = pygame.time.Clock()
+    background, bg_image = game.get_background("Blue.png")    
+    
+    player = Player(100, 100, 50, 50)
+    listener = Joystick()
+    menu = Menu(game.window, listener)
+    state = 'menu'
+    input_device = 'teclado' # teclado ou joystick
+    
+    pygame.mixer.init()
+    pygame.mixer.music.load('assets/Song/BackgroundSong.mp3')
+    pygame.mixer.music.play()
+    
+    run = True
+    while run:
+        clock.tick(game.FPS)
+        
+        
+        if input_device == 'teclado':
+            keys = listener.get_keys()
+            
+        if keys['QUIT']: #ENCERRA O JOGO
+            run = False
+        
+        
+        if state == 'menu':
+            menu()
+        else:
+            player.loop(game.FPS)
+            game.handle_move(player)
+            game.draw(background, bg_image, player)
+        
+    pygame.quit()
+    quit()
+
 if __name__ == '__main__':
 
     global init, world
@@ -446,28 +516,34 @@ if __name__ == '__main__':
     backward_pub = rospy.Publisher('/movement/backward', Int32, queue_size=10)
 
     init = False
-    # game = Game(1000, 800)
-
-    # while not init:
-    #     game.run()
+    game = Game(1000, 800)
+    reset = False
+    end = False
     collision_detected = False
     output_message = 0
     vel_y_message = 0
     vel_x_message = 0
     started = False
+    start_ardupilot()
+    init_gazebo()
     last_collision_time = rospy.Time.now()
     last_forward_time = rospy.Time.now()
     last_backward_time = rospy.Time.now()
     last_right_time = rospy.Time.now()
     last_left_time = rospy.Time.now()
-    
-    
-    reset = False
-    end = False
-    start_ardupilot()
-    init_gazebo()
+
+    while not init:
+        run(game)
+
     rate = rospy.Rate(5)  # 10Hz
     dr = MAV2()
+
+    # reset = False
+    # end = False
+    # start_ardupilot()
+    # init_gazebo()
+    # rate = rospy.Rate(5)  # 10Hz
+    # dr = MAV2()
 
     # init_gazebo()
 
@@ -482,6 +558,10 @@ if __name__ == '__main__':
         vel_x_message = 0
         started = False
         last_collision_time = rospy.Time.now()
+        last_forward_time = rospy.Time.now()
+        last_backward_time = rospy.Time.now()
+        last_right_time = rospy.Time.now()
+        last_left_time = rospy.Time.now()
 
         while not started:
             try:
