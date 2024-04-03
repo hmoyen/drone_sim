@@ -1,6 +1,7 @@
 import subprocess
 import rospy
 import time
+import os
 import random
 from mav import MAV2
 from geometry_msgs.msg import Pose
@@ -31,18 +32,21 @@ prev_row = None
 prev_col = None
 spawned_model_names=[]
 
+# Get the current user's home directory
+user_home = os.path.expanduser("~")
+
+# Define the model paths relative to the current user's home directory
+model_paths = {
+    0: os.path.join(user_home, "sky_simulator/src/gz_sim/models/salon/model.sdf"),
+    1: os.path.join(user_home, "sky_simulator/src/gz_sim/models/thrift_shop/model.sdf"),
+    2: os.path.join(user_home, "sky_simulator/src/gz_sim/models/law_office/model.sdf")
+}
+
+# Define the path to the box model SDF file relative to the current user's home directory
+box_model_path = os.path.join(user_home, "sky_simulator/src/gz_sim/models/grey_wall/model.sdf")
+
 global collision_detected, output_message, dr, started, last_collision_time, end
 global last_forward_time, last_backward_time, last_right_time, last_left_time
-
-# Define a list of model paths corresponding to different objects
-model_paths = {
-    # 0: "/home/lena/sky_ws/src/sky_sim/models/palm_tree/model.sdf",
-    0: "/home/lena/sky_ws/src/sky_sim/models/salon/model.sdf",
-    1: "/home/lena/sky_ws/src/sky_sim/models/thrift_shop/model.sdf",
-    2: "/home/lena/sky_ws/src/sky_sim/models/law_office/model.sdf"
-    # 2: "/home/lena/sky_ws/src/sky_sim/models/tower_crane/model.sdf"
-    # Add more model paths as needed
-}
 
 # Define the 16x4 matrix
 matrix_1 = [
@@ -282,7 +286,7 @@ def construct_world(matrix):
         
         global spawned_model_names
         # Define the path to the box model SDF file
-        box_model_path = "/home/lena/sky_ws/src/sky_sim/models/grey_wall/model.sdf"
+        box_model_path = "/home/lena/sky_simulator/src/gz_sim/models/grey_wall/model.sdf"
 
         # List to store the names of spawned models
         spawned_model_names = []
@@ -375,7 +379,7 @@ def respawn_model(model_name, pose):
 
 def init_gazebo():
 
-    subprocess.Popen(["xterm", "-e", "bash", "-c", "roslaunch sky_sim sky_sim.launch"])
+    subprocess.Popen(["xterm", "-e", "bash", "-c", "roslaunch gz_sim sky_sim.launch"])
 
 def end_gazebo():
     # Find and kill the Gazebo process
