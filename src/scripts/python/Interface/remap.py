@@ -45,8 +45,9 @@ model_paths = {
 # Define the path to the box model SDF file relative to the current user's home directory
 box_model_path = os.path.join(user_home, "sky_simulator/src/gz_sim/models/grey_wall/model.sdf")
 
-global collision_detected, output_message, dr, started, last_collision_time, end
-global last_forward_time, last_backward_time, last_right_time, last_left_time
+global collision_detected, output_message, dr, started, last_collision_time, end, world, vitoria
+global last_forward_time, last_backward_time, last_right_time, last_left_time, up_pressed, down_pressed, confirma
+
 
 # Define the 16x4 matrix
 matrix_1 = [
@@ -94,34 +95,45 @@ class Joystick():
     def __init__(self):
         self.teclas = {'UP': False, 'DOWN': False, 'LEFT': False,
                        'RIGHT': False, 'ENTER': False, 'QUIT': False, 'SPACE': False}
+        self.prev_up = False
+        self.prev_conf = False
+        self.prev_down = False
     
     def get_keys(self):
+        global up_pressed, confirma, down_pressed
+        # self.teclas['DOWN'] = False
+        self.teclas['QUIT'] = False
+        # self.teclas['ENTER'] = False
+    
+        if up_pressed and self.prev_up == False:
+            self.teclas['UP'] = True
+        else: 
+            self.teclas['UP'] = False
         
-        for k in self.teclas.keys():
-                self.teclas[k] = False 
+        self.prev_up = up_pressed
+        print(self.teclas['UP'])
+
+        if down_pressed and self.prev_down == False:
+            self.teclas['DOWN'] = True
+        else: 
+            self.teclas['DOWN'] = False
+        
+        self.prev_down = down_pressed
+
+        if confirma and self.prev_conf == False:
+            self.teclas['ENTER'] = True
+        else: 
+            self.teclas['ENTER'] = False
+        
+        self.prev_conf = confirma
                 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.teclas['QUIT'] = True
-                
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    self.teclas['UP'] = True
-                    print('UP pressed')
-                if event.key == pygame.K_DOWN:
-                    self.teclas['DOWN'] = True
-                    print('DOWN pressed')
-                if event.key == pygame.K_LEFT:
-                    self.teclas['LEFT'] = True
-                    print('LEFT pressed')
-                if event.key == pygame.K_RIGHT:
-                    self.teclas['RIGHT'] = True
-                    print('RIGHT pressed')
-                if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
-                    self.teclas['ENTER'] = True
-                    print('ENTER pressed')
-                    
+
+
         return self.teclas
+        
 
 def get_square_coordinates(x, y, cell_size):
     """
@@ -275,36 +287,45 @@ def input_callback(data):
         # Publish a collision message with value 0
         output_message = 0
 
+def velocity_y_callback(data):
+    global vel_y_message, up_pressed, down_pressed
+    # global previous_data
+
+    if data.data == 1:
+        up_pressed = True
+        vel_y_message = 5
+    elif data.data == -1:
+        vel_y_message = -5
+        down_pressed = True
+    else:
+        vel_y_message = 0
+        up_pressed = False
+        down_pressed = False
+    
+    # print("Up:",up_pressed)
+
+    # previous_data = data.data
+
 def velocity_x_callback(data):
     global vel_x_message
     # print(data.data)
 
     if data.data == 1:
         vel_x_message = 5
+        
     elif data.data == -1:
         vel_x_message = -5
     else:
         vel_x_message = 0
 
-def velocity_y_callback(data):
-    global vel_y_message
-    # print(data.data)
+# def world_callback(data):
 
-    if data.data == 1:
-        vel_y_message = 5
-    elif data.data == -1:
-        vel_y_message = -5
-    else:
-        vel_y_message = 0
+#     global world
 
-def world_callback(data):
-
-    global world
-
-    if not end:
-        if data.data != 0:
-            world = int(data.data)
-            construct_world(matrixes[world])
+#     if not end:
+#         if data.data != 0:
+#             world = int(data.data)
+#             construct_world(matrixes[world])
 
 
 def init_callback(data):
@@ -318,9 +339,7 @@ def init_callback(data):
 
 def construct_world(matrix):
         
-        global spawned_model_names
-        # Define the path to the box model SDF file
-        box_model_path = "/home/lena/sky_simulator/src/gz_sim/models/grey_wall/model.sdf"
+        global spawned_model_names, box_model_path
 
         # List to store the names of spawned models
         spawned_model_names = []
@@ -455,7 +474,26 @@ def end_callback(data):
     else:
         end = False
 
+def confirma_callback(data):
+
+    global confirma
+
+    if data.data == 1:
+        confirma = True
+    else:
+        confirma = False
+
+def vitoria_callback(data):
+
+    global vitoria
+
+    if data.data == 1:
+        vitoria = True
+    else:
+        vitoria = False
+
 def run(game):
+    global world
     clock = pygame.time.Clock()
     background, bg_image = game.get_background("Blue.png")    
     
@@ -470,8 +508,15 @@ def run(game):
     pygame.mixer.music.play()
     
     run = True
-    while run:
+    while not menu.run_gazebo:
         clock.tick(game.FPS)
+        # if not started:
+        #     try:
+        #         dr.takeoff(10)
+        #         print("Takeoff sent")
+        #         rospy.sleep(5)
+        #     except KeyboardInterrupt:
+        #         print("Interrupted")
         
         
         if input_device == 'teclado':
@@ -480,31 +525,34 @@ def run(game):
         if keys['QUIT']: #ENCERRA O JOGO
             run = False
         
-        
         if state == 'menu':
             menu()
         else:
             player.loop(game.FPS)
             game.handle_move(player)
             game.draw(background, bg_image, player)
-        
+    
+    world = menu.MAPA
     pygame.quit()
-    quit()
+    # quit()
 
 if __name__ == '__main__':
 
-    global init, world
+    global init
 
     if rospy.is_shutdown:
         subprocess.Popen(["xterm", "-e", "bash", "-c", "roscore"])
 
     rospy.init_node('transforming_node', anonymous=True)
 
-    rospy.Subscriber('/ros/world', Int32, world_callback, queue_size=10)
+    # rospy.Subscriber('/ros/world', Int32, world_callback, queue_size=10)
     rospy.Subscriber('/ros/init', Int32, init_callback, queue_size=10)
     rospy.Subscriber('/ros/end', Int32, end_callback, queue_size=10)
+    rospy.Subscriber('/ros/confirma', Int32, confirma_callback, queue_size=10)
     # Initialize the output publisher
     output_pub = rospy.Publisher('/broker/collision', Int32, queue_size=10)
+    rospy.Subscriber('/ros/vitoria', Int32, vitoria_callback, queue_size=10)
+    # rospy.Subscriber('/ros/derrota', ContactsState, input_callback, queue_size=10)
     rospy.Subscriber('/drone_bumper', ContactsState, input_callback, queue_size=10)
     rospy.Subscriber('/ros/set_vel_x', Int32, velocity_x_callback, queue_size=10)
     rospy.Subscriber('/ros/set_vel_y', Int32, velocity_y_callback, queue_size=10)
@@ -516,14 +564,18 @@ if __name__ == '__main__':
     backward_pub = rospy.Publisher('/movement/backward', Int32, queue_size=10)
 
     init = False
-    game = Game(1000, 800)
+    
     reset = False
     end = False
+    vitoria = False
     collision_detected = False
     output_message = 0
     vel_y_message = 0
     vel_x_message = 0
     started = False
+    up_pressed = False
+    down_pressed = False
+    confirma = False
     start_ardupilot()
     init_gazebo()
     last_collision_time = rospy.Time.now()
@@ -531,12 +583,12 @@ if __name__ == '__main__':
     last_backward_time = rospy.Time.now()
     last_right_time = rospy.Time.now()
     last_left_time = rospy.Time.now()
-
-    while not init:
-        run(game)
+    
 
     rate = rospy.Rate(5)  # 10Hz
+    
     dr = MAV2()
+    
 
     # reset = False
     # end = False
@@ -548,15 +600,17 @@ if __name__ == '__main__':
     # init_gazebo()
 
     while True:
-
-
         # subprocess.Popen(["xterm", "-e", "bash", "-c", "roslaunch mqtt_client standalone.launch"])
-
+        game = Game(1000, 800)
+        run(game)
+        construct_world(matrixes[world])
         collision_detected = False
         output_message = 0
         vel_y_message = 0
         vel_x_message = 0
         started = False
+        end = False
+        vitoria = False
         last_collision_time = rospy.Time.now()
         last_forward_time = rospy.Time.now()
         last_backward_time = rospy.Time.now()
@@ -570,16 +624,22 @@ if __name__ == '__main__':
                 rospy.sleep(5)
             except KeyboardInterrupt:
                 print("Interrupted")
+        # if reset:
 
-        while not end:
+        while not end and not vitoria:
+            print(vitoria)
             output_pub.publish(output_message)
             dr.set_vel(vel_x_message, vel_y_message, 0, 0)
             rate.sleep()
-            # if reset:
             #     end_gazebo()
             #     init_gazebo()
             #     break
+        if vitoria:
+            print("VITORIA")
         
+        if end:
+            print("DERROTA")
+
         destruct_world(spawned_model_names)
         respawn_model('iris',[0,0,0])
         print("spawned")
@@ -587,9 +647,8 @@ if __name__ == '__main__':
         output_pub.publish(0)
         # end_ardupilot()
         # end_gazebo()
-        end = False
+        
         started = False
         # end_gazebo()
         # break
-
         init = False

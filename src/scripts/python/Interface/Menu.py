@@ -16,6 +16,7 @@ class Menu():
     
     def __init__(self, window, listener):
         self.window = window
+        self.run_gazebo = False
         self.listener = listener
         bg_image = pygame.image.load('assets/Background/Trees.jpg')
         self.drone = pygame.image.load("assets/Drones/1/Idle.png")
@@ -23,6 +24,7 @@ class Menu():
         #self.drone = pygame.transform.scale(drone_image, (window.get_width() // 4, window.get_height() // 4))
         self.X_DRONE = -self.drone.get_width()
         self.X_IMAGE = 0
+        self.MAPA = 0
         self.Y_DRONE1 = window.get_height()//2 + 75
         self.Y_DRONE2 = window.get_height()//2 - 75
         
@@ -118,16 +120,16 @@ class Menu():
             self.TIPO = "AGUARDA"
         # SE NÃO, ALTERA O MODO
         if self.listener.teclas['UP']:
-            self.MAPA = (self.MAPA + 1) % 5
+            self.MAPA = (self.MAPA + 1) % 2
             sound_effect = pygame.mixer.Sound('assets/Song/Up.mp3')
             sound_effect.play()
         if self.listener.teclas['DOWN']:
             sound_effect = pygame.mixer.Sound('assets/Song/Up.mp3')
             sound_effect.play()
             if self.MAPA == 0:
-                self.MAPA = 4
+                self.MAPA = 1
             else:
-                self.MAPA = (self.MAPA - 1) % 5
+                self.MAPA = (self.MAPA - 1) % 2
     
     def aguarda(self):
         selected_mode = self.MODOS[self.MODO]
@@ -143,7 +145,7 @@ class Menu():
         if self.listener.teclas['ENTER']:
             sound_effect = pygame.mixer.Sound('assets/Song/Confirm.mp3')
             sound_effect.play()
-            self.TIPO = "MODO"
+            self.TIPO = "END"
             
     def blit_text(self, surface, text, pos, font, color=pygame.Color('firebrick1')):
         words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
@@ -184,6 +186,7 @@ class Menu():
             self.mapa()
         elif self.TIPO == "AGUARDA":
             self.aguarda()
-        else:
+        elif self.TIPO == "END":
+            self.run_gazebo = True
             # Adicione qualquer outra lógica ou ação padrão aqui, se necessário
             pass
