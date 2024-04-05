@@ -24,7 +24,8 @@ from Menu import Menu
 from gazebo_msgs.msg import ModelState
 from gazebo_msgs.srv import SetModelState
 
-
+#sudo systemctl start mosquitto
+#sudo systemctl enable mosquitto
 # Define the size of each grid cell
 cell_size = 10
 
@@ -360,7 +361,7 @@ def construct_world(matrix):
 
         # Define the dimensions of the box and the gap between the matrix and the wall of boxes
         box_dimensions = [cell_size, cell_size, 20]  # Assuming the wall is 2 meters tall
-        gap = 1  # Gap between the matrix and the wall
+        gap = 0  # Gap between the matrix and the wall
 
         # Iterate through the outer boundary of the matrix to spawn boxes
         for i in range(len(matrix) + 2):
