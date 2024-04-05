@@ -32,9 +32,9 @@ class Menu():
         selected_mode = self.MODOS[self.MODO]
 
         font_path = os.path.join("assets", "Fonts", "ARCADECLASSIC.ttf")
-        font = pygame.font.Font(font_path, 36)
+        font = pygame.font.Font(font_path, 45)
 
-        text = font.render("VOCE SELECIONOU O MODO {}".format(selected_mode), True, pygame.Color('firebrick1'))
+        text = font.render("VOCE SELECIONOU O MODO {}".format(selected_mode), True, pygame.Color('white'))
         text_rect = text.get_rect()
         text_rect.center = (self.window.get_width() // 2, self.window.get_height() // 2)
         #self.window.fill((255, 255, 255))
@@ -66,9 +66,9 @@ class Menu():
         selected_lives = self.VIDAS
 
         font_path = os.path.join("assets", "Fonts", "ARCADECLASSIC.ttf")
-        font = pygame.font.Font(font_path, 36)
+        font = pygame.font.Font(font_path, 45)
 
-        text = font.render("VOCE SELECIONOU O MODO {} COM {} VIDAS".format(selected_mode, selected_lives), True, pygame.Color('firebrick1'))
+        text = font.render("VOCE SELECIONOU O MODO {} COM {} VIDAS".format(selected_mode, selected_lives), True, pygame.Color('white'))
         text_rect = text.get_rect()
         text_rect.center = (self.window.get_width() // 2, self.window.get_height() // 2)
         #self.window.fill((255, 255, 255))
@@ -105,7 +105,7 @@ class Menu():
         font_path = os.path.join("assets", "Fonts", "ARCADECLASSIC.ttf")
         font = pygame.font.Font(font_path, 36)
 
-        text = font.render("VOCE SELECIONOU O MODO {} COM {} VIDAS NO MAPA {}".format(selected_mode, selected_lives, selected_map), True, pygame.Color('firebrick1'))
+        text = font.render("VOCE SELECIONOU O MODO {} COM {} VIDAS NO MAPA {}".format(selected_mode, selected_lives, selected_map), True, pygame.Color('white'))
         text_rect = text.get_rect()
         text_rect.center = (self.window.get_width() // 2, self.window.get_height() // 2)
         #self.window.fill((255, 255, 255))
@@ -147,7 +147,7 @@ class Menu():
             sound_effect.play()
             self.TIPO = "END"
             
-    def blit_text(self, surface, text, pos, font, color=pygame.Color('firebrick1')):
+    def blit_text(self, surface, text, pos, font, color=pygame.Color('white')):
         words = [word.split(' ') for word in text.splitlines()]  # 2D array where each row is a list of words.
         space = font.size(' ')[0]  # The width of a space.
         max_width, max_height = surface.get_size()

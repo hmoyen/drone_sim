@@ -45,7 +45,7 @@ model_paths = {
 # Define the path to the box model SDF file relative to the current user's home directory
 box_model_path = os.path.join(user_home, "sky_simulator/src/gz_sim/models/grey_wall/model.sdf")
 
-global collision_detected, output_message, dr, started, last_collision_time, end, world, vitoria
+global collision_detected, output_message, dr, started, last_collision_time, end, world, vitoria, init_pub, last_init_time
 global last_forward_time, last_backward_time, last_right_time, last_left_time, up_pressed, down_pressed, confirma
 
 
@@ -111,7 +111,6 @@ class Joystick():
             self.teclas['UP'] = False
         
         self.prev_up = up_pressed
-        print(self.teclas['UP'])
 
         if down_pressed and self.prev_down == False:
             self.teclas['DOWN'] = True
@@ -218,7 +217,21 @@ def monitor_movement(row, col):
     prev_row = row
     prev_col = col
 
+def init_monitor():
+    global last_init_time
 
+    # Calculate the time elapsed since the last initialization
+    time_since_init = rospy.get_rostime() - last_init_time
+    print("Time last:",time_since_init)
+
+    # Check if the elapsed time exceeds the desired publish rate
+    if time_since_init >= rospy.Duration(1):
+        # Publish the initialization signal
+        init_pub.publish(1)
+        print("Time:",time_since_init)
+        # Update the last initialization time
+        last_init_time = rospy.get_rostime()
+    
 
 def pose_callback(data):
     """
@@ -288,35 +301,36 @@ def input_callback(data):
         output_message = 0
 
 def velocity_y_callback(data):
-    global vel_y_message, up_pressed, down_pressed
+    global vel_y_message
     # global previous_data
 
     if data.data == 1:
-        up_pressed = True
         vel_y_message = 5
     elif data.data == -1:
         vel_y_message = -5
-        down_pressed = True
+
     else:
         vel_y_message = 0
-        up_pressed = False
-        down_pressed = False
+
     
     # print("Up:",up_pressed)
 
     # previous_data = data.data
 
 def velocity_x_callback(data):
-    global vel_x_message
+    global vel_x_message, up_pressed, down_pressed
     # print(data.data)
 
     if data.data == 1:
         vel_x_message = 5
-        
+        up_pressed = True
     elif data.data == -1:
         vel_x_message = -5
+        down_pressed = True
     else:
         vel_x_message = 0
+        up_pressed = False
+        down_pressed = False
 
 # def world_callback(data):
 
@@ -328,14 +342,14 @@ def velocity_x_callback(data):
 #             construct_world(matrixes[world])
 
 
-def init_callback(data):
+#def init_callback(data):
+#
+#    global init
 
-    global init
-
-    if data.data == 1:
-        init = True
-    else:
-        init = False
+#    if data.data == 1:
+ #       init = True
+  #  else:
+   #     init = False
 
 def construct_world(matrix):
         
@@ -518,9 +532,9 @@ def run(game):
         #     except KeyboardInterrupt:
         #         print("Interrupted")
         
-        
         if input_device == 'teclado':
             keys = listener.get_keys()
+        init_monitor()
             
         if keys['QUIT']: #ENCERRA O JOGO
             run = False
@@ -546,12 +560,13 @@ if __name__ == '__main__':
     rospy.init_node('transforming_node', anonymous=True)
 
     # rospy.Subscriber('/ros/world', Int32, world_callback, queue_size=10)
-    rospy.Subscriber('/ros/init', Int32, init_callback, queue_size=10)
+    #rospy.Subscriber('/ros/init', Int32, init_callback, queue_size=10)
     rospy.Subscriber('/ros/end', Int32, end_callback, queue_size=10)
     rospy.Subscriber('/ros/confirma', Int32, confirma_callback, queue_size=10)
     # Initialize the output publisher
     output_pub = rospy.Publisher('/broker/collision', Int32, queue_size=10)
     rospy.Subscriber('/ros/vitoria', Int32, vitoria_callback, queue_size=10)
+    init_pub = rospy.Publisher('/ros/init', Int32, queue_size=10)
     # rospy.Subscriber('/ros/derrota', ContactsState, input_callback, queue_size=10)
     rospy.Subscriber('/drone_bumper', ContactsState, input_callback, queue_size=10)
     rospy.Subscriber('/ros/set_vel_x', Int32, velocity_x_callback, queue_size=10)
@@ -583,6 +598,7 @@ if __name__ == '__main__':
     last_backward_time = rospy.Time.now()
     last_right_time = rospy.Time.now()
     last_left_time = rospy.Time.now()
+    last_init_time = rospy.Time.now()
     
 
     rate = rospy.Rate(5)  # 10Hz
@@ -600,6 +616,10 @@ if __name__ == '__main__':
     # init_gazebo()
 
     while True:
+        started = False
+        # end_gazebo()
+        # break
+        init = False
         # subprocess.Popen(["xterm", "-e", "bash", "-c", "roslaunch mqtt_client standalone.launch"])
         game = Game(1000, 800)
         run(game)
@@ -641,14 +661,9 @@ if __name__ == '__main__':
             print("DERROTA")
 
         destruct_world(spawned_model_names)
-        respawn_model('iris',[0,0,0])
+        respawn_model('iris',[1,0,0])
         print("spawned")
         dr.set_vel(0, 0, 0, 0)
         output_pub.publish(0)
         # end_ardupilot()
         # end_gazebo()
-        
-        started = False
-        # end_gazebo()
-        # break
-        init = False
