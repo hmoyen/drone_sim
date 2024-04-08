@@ -290,7 +290,7 @@
       <include>
         <uri>model://drone_with_camera</uri>
       </include>
-        <pose> 10 0 0.05 0 0 0</pose>
+        <pose> 10 0 0.05 0 0 1.6</pose>
     </model>
 
   </world>
