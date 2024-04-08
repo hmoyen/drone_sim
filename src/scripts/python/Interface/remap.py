@@ -438,7 +438,7 @@ def respawn_model(model_name, pose):
         model_state.twist.linear.z = 0
         model_state.twist.angular.x = 0
         model_state.twist.angular.y = 0
-        model_state.twist.angular.z = 0
+        model_state.twist.angular.z = 1.6
         model_state.reference_frame = 'world'
         set_model_state(model_state)
         rospy.loginfo("Model {} respawned at pose {}".format(model_name, pose))
@@ -656,7 +656,7 @@ if __name__ == '__main__':
             #     init_gazebo()
             #     break
         if vitoria:
-            print("VITORIA")
+            print("VITÓRIA")
         
         if end:
             print("DERROTA")
@@ -664,7 +664,7 @@ if __name__ == '__main__':
         destruct_world(spawned_model_names)
         respawn_model('iris',[1,0,0])
         print("spawned")
-        dr.set_vel(0, 0, 0, 0)
+        dr.set_vel(10, 0, 0, 1.6)
         output_pub.publish(0)
         # end_ardupilot()
         # end_gazebo()
